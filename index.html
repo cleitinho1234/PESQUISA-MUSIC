@@ -48,6 +48,7 @@ display:flex;
 flex-wrap:wrap;
 justify-content:center;
 gap:20px;
+padding-bottom:50px;
 }
 
 .video{
@@ -95,17 +96,23 @@ function buscar(){
 
 let musica = document.getElementById("pesquisa").value;
 
-fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${musica}&type=video&maxResults=8&key=${API_KEY}`)
+fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${musica}&type=video&maxResults=12&key=${API_KEY}`)
 
 .then(res => res.json())
 
 .then(data => {
 
 let html = "";
+let videosMostrados = [];
 
 data.items.forEach(video => {
 
 let videoId = video.id.videoId;
+
+if(!videosMostrados.includes(videoId)){
+
+videosMostrados.push(videoId);
+
 let titulo = video.snippet.title;
 let thumb = video.snippet.thumbnails.medium.url;
 
@@ -122,6 +129,8 @@ html += `
 </div>
 
 `;
+
+}
 
 });
 
