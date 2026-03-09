@@ -58,8 +58,8 @@ let startX,startY;
 
 const grid=40;
 
-// lista de linhas
 let lines=[];
+let selectedLine=null;
 
 function drawGrid(){
 
@@ -92,10 +92,23 @@ ctx.strokeStyle="black";
 ctx.lineWidth=4;
 
 lines.forEach(line=>{
+
 ctx.beginPath();
 ctx.moveTo(line.x1,line.y1);
 ctx.lineTo(line.x2,line.y2);
 ctx.stroke();
+
+if(line.text){
+
+let mx=(line.x1+line.x2)/2;
+let my=(line.y1+line.y2)/2;
+
+ctx.fillStyle="blue";
+ctx.font="16px Arial";
+ctx.fillText(line.text,mx+5,my-5);
+
+}
+
 });
 
 }
@@ -104,12 +117,36 @@ drawGrid();
 
 canvas.addEventListener("pointerdown",(e)=>{
 
-drawing=true;
-
 const rect=canvas.getBoundingClientRect();
 
-startX=Math.round((e.clientX-rect.left)/grid)*grid;
-startY=Math.round((e.clientY-rect.top)/grid)*grid;
+let x=e.clientX-rect.left;
+let y=e.clientY-rect.top;
+
+let clickedLine=findLine(x,y);
+
+if(clickedLine){
+
+let ask=confirm("Quer inserir números?");
+
+if(ask){
+
+let value=prompt("Digite o número:");
+
+if(value){
+clickedLine.text=value;
+redraw();
+}
+
+}
+
+return;
+
+}
+
+drawing=true;
+
+startX=Math.round(x/grid)*grid;
+startY=Math.round(y/grid)*grid;
 
 });
 
@@ -124,21 +161,74 @@ const rect=canvas.getBoundingClientRect();
 let endX=Math.round((e.clientX-rect.left)/grid)*grid;
 let endY=Math.round((e.clientY-rect.top)/grid)*grid;
 
-// salva linha
 lines.push({
 x1:startX,
 y1:startY,
 x2:endX,
-y2:endY
+y2:endY,
+text:""
 });
 
 redraw();
 
 });
 
+function findLine(x,y){
+
+for(let line of lines){
+
+let dist=distanceToLine(x,y,line);
+
+if(dist<10){
+return line;
+}
+
+}
+
+return null;
+
+}
+
+function distanceToLine(px,py,line){
+
+let x1=line.x1;
+let y1=line.y1;
+let x2=line.x2;
+let y2=line.y2;
+
+let A=px-x1;
+let B=py-y1;
+let C=x2-x1;
+let D=y2-y1;
+
+let dot=A*C+B*D;
+let len=C*C+D*D;
+
+let param=dot/len;
+
+let xx,yy;
+
+if(param<0){
+xx=x1;
+yy=y1;
+}else if(param>1){
+xx=x2;
+yy=y2;
+}else{
+xx=x1+param*C;
+yy=y1+param*D;
+}
+
+let dx=px-xx;
+let dy=py-yy;
+
+return Math.sqrt(dx*dx+dy*dy);
+
+}
+
 function undoLine(){
 
-lines.pop(); // remove última linha
+lines.pop();
 redraw();
 
 }
