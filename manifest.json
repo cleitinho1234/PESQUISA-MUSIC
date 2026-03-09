@@ -1,7 +1,7 @@
 {
   "name": "Planta Fácil",
   "short_name": "Planta",
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#222222",
   "theme_color": "#4CAF50",
