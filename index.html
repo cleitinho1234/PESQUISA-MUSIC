@@ -53,7 +53,6 @@ border-radius:6px;
 <div>
 
 <button onclick="undoLine()">Apagar última linha</button>
-
 <button onclick="download()">Baixar Planta</button>
 
 </div>
@@ -64,6 +63,7 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const grid = 40;
+const snapDistance = 20;
 
 let lines=[];
 let texts=[];
@@ -96,13 +96,13 @@ ctx.beginPath();
 
 if(x % (grid*5) === 0){
 
-ctx.strokeStyle="#888";
+ctx.strokeStyle="#666";
 ctx.lineWidth=2;
 
 }else{
 
-ctx.strokeStyle="#bbb";
-ctx.lineWidth=1.5;
+ctx.strokeStyle="#999";
+ctx.lineWidth=1.4;
 
 }
 
@@ -118,13 +118,13 @@ ctx.beginPath();
 
 if(y % (grid*5) === 0){
 
-ctx.strokeStyle="#888";
+ctx.strokeStyle="#666";
 ctx.lineWidth=2;
 
 }else{
 
-ctx.strokeStyle="#bbb";
-ctx.lineWidth=1.5;
+ctx.strokeStyle="#999";
+ctx.lineWidth=1.4;
 
 }
 
@@ -173,6 +173,28 @@ ctx.fillText(t.text,t.x,t.y);
 
 }
 
+function snapToLine(x,y){
+
+for(let line of lines){
+
+if(Math.abs(x-line.x1)<snapDistance && Math.abs(y-line.y1)<snapDistance){
+
+return {x:line.x1,y:line.y1};
+
+}
+
+if(Math.abs(x-line.x2)<snapDistance && Math.abs(y-line.y2)<snapDistance){
+
+return {x:line.x2,y:line.y2};
+
+}
+
+}
+
+return {x,y};
+
+}
+
 canvas.addEventListener("pointerdown",(e)=>{
 
 const rect=canvas.getBoundingClientRect();
@@ -180,8 +202,10 @@ const rect=canvas.getBoundingClientRect();
 let x=e.clientX-rect.left;
 let y=e.clientY-rect.top;
 
-startX=Math.round(x/grid)*grid;
-startY=Math.round(y/grid)*grid;
+let snapped=snapToLine(x,y);
+
+startX=Math.round(snapped.x/grid)*grid;
+startY=Math.round(snapped.y/grid)*grid;
 
 moved=false;
 
@@ -189,7 +213,7 @@ holdTimer=setTimeout(()=>{
 
 let clickedLine=findLine(x,y);
 
-let value=prompt("Digite medida ou nome (Ex: 3.50m, Sala, Quarto)");
+let value=prompt("Digite medida ou nome (Ex: 3.50m, Sala)");
 
 if(value){
 
@@ -230,8 +254,13 @@ if(!moved) return;
 
 const rect=canvas.getBoundingClientRect();
 
-let endX=Math.round((e.clientX-rect.left)/grid)*grid;
-let endY=Math.round((e.clientY-rect.top)/grid)*grid;
+let x=e.clientX-rect.left;
+let y=e.clientY-rect.top;
+
+let snapped=snapToLine(x,y);
+
+let endX=Math.round(snapped.x/grid)*grid;
+let endY=Math.round(snapped.y/grid)*grid;
 
 lines.push({
 x1:startX,
