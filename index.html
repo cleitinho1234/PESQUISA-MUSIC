@@ -71,7 +71,6 @@ const ctx=canvas.getContext("2d");
 const grid=40;
 
 let zoom=1;
-
 let offsetX=0;
 let offsetY=0;
 
@@ -82,7 +81,6 @@ let startX,startY;
 let moved=false;
 
 let holdTimer=null;
-
 let draggingText=null;
 
 function resizeCanvas(){
@@ -122,7 +120,12 @@ function zoomOut(){
 
 zoom-=0.2;
 
-if(zoom<0.4) zoom=0.4;
+if(zoom<0.4){
+zoom=0.4;
+}
+
+offsetX=0;
+offsetY=0;
 
 redraw();
 
@@ -273,7 +276,6 @@ return;
 }
 
 moved=true;
-
 clearTimeout(holdTimer);
 
 });
