@@ -53,13 +53,14 @@ cursor:pointer;
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-let drawing=false;
 let startX,startY;
+let moved=false;
+let holdTimer=null;
 
 const grid=40;
 
 let lines=[];
-let selectedLine=null;
+let texts=[];
 
 function drawGrid(){
 
@@ -111,6 +112,14 @@ ctx.fillText(line.text,mx+5,my-5);
 
 });
 
+texts.forEach(t=>{
+
+ctx.fillStyle="red";
+ctx.font="18px Arial";
+ctx.fillText(t.text,t.x,t.y);
+
+});
+
 }
 
 drawGrid();
@@ -122,39 +131,53 @@ const rect=canvas.getBoundingClientRect();
 let x=e.clientX-rect.left;
 let y=e.clientY-rect.top;
 
+startX=Math.round(x/grid)*grid;
+startY=Math.round(y/grid)*grid;
+
+moved=false;
+
+holdTimer=setTimeout(()=>{
+
 let clickedLine=findLine(x,y);
+
+let value=prompt("Digite medida ou nome (Ex: 3.50m, Sala, Quarto)");
+
+if(value){
 
 if(clickedLine){
 
-let ask=confirm("Quer inserir números?");
-
-if(ask){
-
-let value=prompt("Digite o número:");
-
-if(value){
 clickedLine.text=value;
+
+}else{
+
+texts.push({
+text:value,
+x:x,
+y:y
+});
+
+}
+
 redraw();
-}
 
 }
 
-return;
+},1000);
 
-}
+});
 
-drawing=true;
+canvas.addEventListener("pointermove",()=>{
 
-startX=Math.round(x/grid)*grid;
-startY=Math.round(y/grid)*grid;
+moved=true;
+clearTimeout(holdTimer);
 
 });
 
 canvas.addEventListener("pointerup",(e)=>{
 
-if(!drawing) return;
+clearTimeout(holdTimer);
 
-drawing=false;
+if(!moved) return;
 
 const rect=canvas.getBoundingClientRect();
 
