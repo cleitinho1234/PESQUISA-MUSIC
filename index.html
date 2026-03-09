@@ -14,16 +14,17 @@ flex-direction:column;
 align-items:center;
 color:white;
 font-family:Arial;
+text-align:center;
 }
 
 h1{
 margin:10px;
+font-size:20px;
 }
 
 canvas{
-background:white;
-touch-action:none;
 border:2px solid black;
+touch-action:none;
 }
 
 button{
@@ -38,7 +39,7 @@ cursor:pointer;
 
 <body>
 
-<h1>Planta Fácil</h1>
+<h1>Alisson da Cruz Silva fez esse site para Renilson</h1>
 
 <canvas id="canvas" width="800" height="600"></canvas>
 
@@ -58,6 +59,10 @@ let startX,startY;
 const grid=40;
 
 function drawGrid(){
+
+// fundo branco real
+ctx.fillStyle="white";
+ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.strokeStyle="#ddd";
 
@@ -120,10 +125,22 @@ drawGrid();
 
 function download(){
 
+// cria um canvas temporário para garantir fundo branco
+const tempCanvas=document.createElement("canvas");
+const tempCtx=tempCanvas.getContext("2d");
+
+tempCanvas.width=canvas.width;
+tempCanvas.height=canvas.height;
+
+tempCtx.fillStyle="white";
+tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+
+tempCtx.drawImage(canvas,0,0);
+
 const link=document.createElement("a");
 
 link.download="planta.png";
-link.href=canvas.toDataURL();
+link.href=tempCanvas.toDataURL("image/png");
 
 link.click();
 
