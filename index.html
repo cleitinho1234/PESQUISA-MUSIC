@@ -72,6 +72,9 @@ const grid=40;
 
 let zoom=1;
 
+let offsetX=0;
+let offsetY=0;
+
 let lines=[];
 let texts=[];
 
@@ -98,6 +101,19 @@ resizeCanvas();
 function zoomIn(){
 
 zoom+=0.2;
+
+if(lines.length>0){
+
+let last=lines[lines.length-1];
+
+let centerX=(last.x1+last.x2)/2;
+let centerY=(last.y1+last.y2)/2;
+
+offsetX=canvas.width/2-centerX*zoom;
+offsetY=canvas.height/2-centerY*zoom;
+
+}
+
 redraw();
 
 }
@@ -106,9 +122,7 @@ function zoomOut(){
 
 zoom-=0.2;
 
-if(zoom<0.4){
-zoom=0.4;
-}
+if(zoom<0.4) zoom=0.4;
 
 redraw();
 
@@ -116,13 +130,14 @@ redraw();
 
 function drawGrid(){
 
+ctx.setTransform(1,0,0,1,0,0);
+
 ctx.fillStyle="white";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.save();
-ctx.scale(zoom,zoom);
+ctx.setTransform(zoom,0,0,zoom,offsetX,offsetY);
 
-for(let x=0;x<canvas.width;x+=grid){
+for(let x=0;x<2000;x+=grid){
 
 ctx.beginPath();
 
@@ -135,12 +150,12 @@ ctx.lineWidth=1.4;
 }
 
 ctx.moveTo(x,0);
-ctx.lineTo(x,canvas.height);
+ctx.lineTo(x,2000);
 ctx.stroke();
 
 }
 
-for(let y=0;y<canvas.height;y+=grid){
+for(let y=0;y<2000;y+=grid){
 
 ctx.beginPath();
 
@@ -153,21 +168,16 @@ ctx.lineWidth=1.4;
 }
 
 ctx.moveTo(0,y);
-ctx.lineTo(canvas.width,y);
+ctx.lineTo(2000,y);
 ctx.stroke();
 
 }
-
-ctx.restore();
 
 }
 
 function redraw(){
 
 drawGrid();
-
-ctx.save();
-ctx.scale(zoom,zoom);
 
 ctx.strokeStyle="#111";
 ctx.lineWidth=6;
@@ -179,17 +189,6 @@ ctx.moveTo(line.x1,line.y1);
 ctx.lineTo(line.x2,line.y2);
 ctx.stroke();
 
-if(line.text){
-
-let mx=(line.x1+line.x2)/2;
-let my=(line.y1+line.y2)/2;
-
-ctx.fillStyle="blue";
-ctx.font="16px Arial";
-ctx.fillText(line.text,mx+5,my-5);
-
-}
-
 });
 
 texts.forEach(t=>{
@@ -200,8 +199,6 @@ ctx.fillText(t.text,t.x,t.y);
 
 });
 
-ctx.restore();
-
 }
 
 function getMousePos(e){
@@ -210,8 +207,8 @@ const rect=canvas.getBoundingClientRect();
 
 return{
 
-x:(e.clientX-rect.left)/zoom,
-y:(e.clientY-rect.top)/zoom
+x:(e.clientX-rect.left-offsetX)/zoom,
+y:(e.clientY-rect.top-offsetY)/zoom
 
 };
 
