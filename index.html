@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Planta Fácil</title>
 
 <style>
@@ -19,33 +22,40 @@ text-align:center;
 
 h1{
 margin:10px;
-font-size:20px;
+font-size:18px;
 }
 
 canvas{
 border:2px solid black;
 touch-action:none;
+background:white;
 }
 
 button{
 margin:10px;
-padding:10px 20px;
+padding:12px 20px;
 font-size:18px;
 cursor:pointer;
+border:none;
+border-radius:6px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <h1>Alisson da Cruz Silva fez esse site para Renilson</h1>
 
-<canvas id="canvas" width="800" height="600"></canvas>
+<canvas id="canvas"></canvas>
 
 <div>
+
 <button onclick="undoLine()">Apagar última linha</button>
+
 <button onclick="download()">Baixar Planta</button>
+
 </div>
 
 <script>
@@ -53,14 +63,27 @@ cursor:pointer;
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+const grid = 40;
+
+let lines=[];
+let texts=[];
+
 let startX,startY;
 let moved=false;
 let holdTimer=null;
 
-const grid=40;
+function resizeCanvas(){
 
-let lines=[];
-let texts=[];
+canvas.width = window.innerWidth * 0.95;
+canvas.height = window.innerHeight * 0.65;
+
+redraw();
+
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+resizeCanvas();
 
 function drawGrid(){
 
@@ -70,17 +93,21 @@ ctx.fillRect(0,0,canvas.width,canvas.height);
 ctx.strokeStyle="#ddd";
 
 for(let x=0;x<canvas.width;x+=grid){
+
 ctx.beginPath();
 ctx.moveTo(x,0);
 ctx.lineTo(x,canvas.height);
 ctx.stroke();
+
 }
 
 for(let y=0;y<canvas.height;y+=grid){
+
 ctx.beginPath();
 ctx.moveTo(0,y);
 ctx.lineTo(canvas.width,y);
 ctx.stroke();
+
 }
 
 }
@@ -121,8 +148,6 @@ ctx.fillText(t.text,t.x,t.y);
 });
 
 }
-
-drawGrid();
 
 canvas.addEventListener("pointerdown",(e)=>{
 
@@ -232,14 +257,20 @@ let param=dot/len;
 let xx,yy;
 
 if(param<0){
+
 xx=x1;
 yy=y1;
+
 }else if(param>1){
+
 xx=x2;
 yy=y2;
+
 }else{
+
 xx=x1+param*C;
 yy=y1+param*D;
+
 }
 
 let dx=px-xx;
