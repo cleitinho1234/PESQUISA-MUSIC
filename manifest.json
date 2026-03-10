@@ -19,5 +19,10 @@
     }
   ],
   "description": "Aplicativo para desenhar plantas de casas de forma simples e rápida.",
-  "id": "/planta-facil"
+  "id": "/planta-facil",
+  "dir": "auto",
+  "lang": "pt",
+  "categories": [
+    "business"
+  ]
 }
