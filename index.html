@@ -1,56 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Planta Fácil</title>
-
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4CAF50">
-
 <style>
-
 body{
-margin:0;
-background:#222;
-display:flex;
-flex-direction:column;
-align-items:center;
-font-family:Arial;
-color:white;
-text-align:center;
+  margin:0;
+  background:#222;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-family:Arial;
+  color:white;
+  text-align:center;
 }
-
 h1{
-margin:10px;
-font-size:18px;
+  margin:10px;
+  font-size:18px;
 }
-
 canvas{
-background:white;
-border:2px solid black;
-touch-action:none;
+  background:white;
+  border:2px solid black;
+  touch-action:none;
 }
-
 .controls{
-margin:10px;
+  margin:10px;
 }
-
 button{
-margin:5px;
-padding:10px 15px;
-font-size:18px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+  margin:5px;
+  padding:10px 15px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
+.repo-list{
+  margin-top:10px;
+  width:90%;
+  max-width:400px;
+  text-align:left;
+}
+.repo-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#333;
+  padding:5px 10px;
+  margin-bottom:5px;
+  border-radius:4px;
+}
+.repo-item span{
+  cursor:pointer;
+}
 </style>
-
 </head>
-
 <body>
 
 <h1>Alisson da Cruz Silva fez esse site para Renilson</h1>
@@ -58,299 +64,197 @@ cursor:pointer;
 <canvas id="canvas"></canvas>
 
 <div class="controls">
-
-<button onclick="zoomIn()">🔍+</button>
-<button onclick="zoomOut()">🔍-</button>
-<button onclick="undoLine()">Apagar última linha</button>
-<button onclick="download()">Baixar Planta</button>
-
+  <button onclick="zoomIn()">🔍+</button>
+  <button onclick="zoomOut()">🔍-</button>
+  <button onclick="undoLine()">Apagar última linha</button>
+  <button onclick="download()">Baixar Planta</button>
+  <button onclick="saveRepo()">💾 Salvar Repositório</button>
+  <button onclick="newRepo()">🆕 Novo Repositório</button>
 </div>
 
-<script>
+<div class="repo-list" id="repoList"></div>
 
+<script>
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
-
 const grid=40;
-
 let zoom=1;
 let offsetX=0;
 let offsetY=0;
-
 let lines=[];
 let texts=[];
-
-let startX,startY;
-let moved=false;
-
+let startX,startY,moved=false;
 let holdTimer=null;
 let draggingText=null;
 
+// Redimensiona canvas
 function resizeCanvas(){
-
-canvas.width=window.innerWidth*0.95;
-canvas.height=window.innerHeight*0.75;
-
-redraw();
-
+  canvas.width=window.innerWidth*0.95;
+  canvas.height=window.innerHeight*0.75;
+  redraw();
 }
-
 window.addEventListener("resize",resizeCanvas);
-
 resizeCanvas();
 
-function zoomIn(){
+// Zoom
+function zoomIn(){ zoom+=0.2; redraw(); }
+function zoomOut(){ zoom=Math.max(0.4, zoom-0.2); redraw(); }
 
-zoom+=0.2;
-
-if(lines.length>0){
-
-let last=lines[lines.length-1];
-
-let centerX=(last.x1+last.x2)/2;
-let centerY=(last.y1+last.y2)/2;
-
-offsetX=canvas.width/2-centerX*zoom;
-offsetY=canvas.height/2-centerY*zoom;
-
-}
-
-redraw();
-
-}
-
-function zoomOut(){
-
-zoom-=0.2;
-
-if(zoom<0.4){
-zoom=0.4;
-}
-
-offsetX=0;
-offsetY=0;
-
-redraw();
-
-}
-
+// Grid e desenho
 function drawGrid(){
-
-ctx.setTransform(1,0,0,1,0,0);
-
-ctx.fillStyle="white";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.setTransform(zoom,0,0,zoom,offsetX,offsetY);
-
-for(let x=0;x<2000;x+=grid){
-
-ctx.beginPath();
-
-if(x%(grid*5)==0){
-ctx.strokeStyle="#666";
-ctx.lineWidth=2;
-}else{
-ctx.strokeStyle="#999";
-ctx.lineWidth=1.4;
-}
-
-ctx.moveTo(x,0);
-ctx.lineTo(x,2000);
-ctx.stroke();
-
-}
-
-for(let y=0;y<2000;y+=grid){
-
-ctx.beginPath();
-
-if(y%(grid*5)==0){
-ctx.strokeStyle="#666";
-ctx.lineWidth=2;
-}else{
-ctx.strokeStyle="#999";
-ctx.lineWidth=1.4;
-}
-
-ctx.moveTo(0,y);
-ctx.lineTo(2000,y);
-ctx.stroke();
-
-}
-
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle="white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.setTransform(zoom,0,0,zoom,offsetX,offsetY);
+  for(let x=0;x<2000;x+=grid){
+    ctx.beginPath();
+    ctx.strokeStyle=(x%(grid*5)==0)?"#666":"#999";
+    ctx.lineWidth=(x%(grid*5)==0)?2:1.4;
+    ctx.moveTo(x,0); ctx.lineTo(x,2000); ctx.stroke();
+  }
+  for(let y=0;y<2000;y+=grid){
+    ctx.beginPath();
+    ctx.strokeStyle=(y%(grid*5)==0)?"#666":"#999";
+    ctx.lineWidth=(y%(grid*5)==0)?2:1.4;
+    ctx.moveTo(0,y); ctx.lineTo(2000,y); ctx.stroke();
+  }
 }
 
 function redraw(){
-
-drawGrid();
-
-ctx.strokeStyle="#111";
-ctx.lineWidth=6;
-
-lines.forEach(line=>{
-
-ctx.beginPath();
-ctx.moveTo(line.x1,line.y1);
-ctx.lineTo(line.x2,line.y2);
-ctx.stroke();
-
-});
-
-texts.forEach(t=>{
-
-ctx.fillStyle="red";
-ctx.font="18px Arial";
-ctx.fillText(t.text,t.x,t.y);
-
-});
-
+  drawGrid();
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=6;
+  lines.forEach(line=>{
+    ctx.beginPath();
+    ctx.moveTo(line.x1,line.y1);
+    ctx.lineTo(line.x2,line.y2);
+    ctx.stroke();
+  });
+  texts.forEach(t=>{
+    ctx.fillStyle="red";
+    ctx.font="18px Arial";
+    ctx.fillText(t.text,t.x,t.y);
+  });
 }
 
+// Mouse events
 function getMousePos(e){
-
-const rect=canvas.getBoundingClientRect();
-
-return{
-
-x:(e.clientX-rect.left-offsetX)/zoom,
-y:(e.clientY-rect.top-offsetY)/zoom
-
-};
-
+  const rect=canvas.getBoundingClientRect();
+  return {x:(e.clientX-rect.left-offsetX)/zoom, y:(e.clientY-rect.top-offsetY)/zoom};
 }
 
 canvas.addEventListener("pointerdown",(e)=>{
-
-let pos=getMousePos(e);
-
-let x=pos.x;
-let y=pos.y;
-
-let text=findText(x,y);
-
-if(text){
-
-holdTimer=setTimeout(()=>{
-draggingText=text;
-},500);
-
-return;
-
-}
-
-startX=Math.round(x/grid)*grid;
-startY=Math.round(y/grid)*grid;
-
-moved=false;
-
-holdTimer=setTimeout(()=>{
-
-let value=prompt("Digite medida ou nome (Ex: 3.50m, Sala)");
-
-if(value){
-
-texts.push({
-text:value,
-x:x,
-y:y
-});
-
-redraw();
-
-}
-
-},1000);
-
+  let pos=getMousePos(e);
+  let x=pos.x, y=pos.y;
+  let text=findText(x,y);
+  if(text){
+    holdTimer=setTimeout(()=>{ draggingText=text; },500);
+    return;
+  }
+  startX=Math.round(x/grid)*grid;
+  startY=Math.round(y/grid)*grid;
+  moved=false;
+  holdTimer=setTimeout(()=>{
+    let value=prompt("Digite medida ou nome (Ex: 3.50m, Sala)");
+    if(value){ texts.push({text:value,x:x,y:y}); redraw(); }
+  },1000);
 });
 
 canvas.addEventListener("pointermove",(e)=>{
-
-let pos=getMousePos(e);
-
-if(draggingText){
-
-draggingText.x=pos.x;
-draggingText.y=pos.y;
-
-redraw();
-return;
-
-}
-
-moved=true;
-clearTimeout(holdTimer);
-
+  let pos=getMousePos(e);
+  if(draggingText){ draggingText.x=pos.x; draggingText.y=pos.y; redraw(); return; }
+  moved=true; clearTimeout(holdTimer);
 });
 
 canvas.addEventListener("pointerup",(e)=>{
-
-clearTimeout(holdTimer);
-
-if(draggingText){
-
-draggingText=null;
-return;
-
-}
-
-if(!moved) return;
-
-let pos=getMousePos(e);
-
-let endX=Math.round(pos.x/grid)*grid;
-let endY=Math.round(pos.y/grid)*grid;
-
-lines.push({
-x1:startX,
-y1:startY,
-x2:endX,
-y2:endY
-});
-
-redraw();
-
+  clearTimeout(holdTimer);
+  if(draggingText){ draggingText=null; return; }
+  if(!moved) return;
+  let pos=getMousePos(e);
+  let endX=Math.round(pos.x/grid)*grid;
+  let endY=Math.round(pos.y/grid)*grid;
+  lines.push({x1:startX,y1:startY,x2:endX,y2:endY});
+  redraw();
 });
 
 function findText(x,y){
-
-for(let t of texts){
-
-let width=ctx.measureText(t.text).width;
-let height=20;
-
-if(x>t.x && x<t.x+width && y<t.y && y>t.y-height){
-return t;
+  for(let t of texts){
+    let width=ctx.measureText(t.text).width;
+    let height=20;
+    if(x>t.x && x<t.x+width && y<t.y && y>t.y-height) return t;
+  }
+  return null;
 }
 
-}
-
-return null;
-
-}
-
-function undoLine(){
-
-lines.pop();
-redraw();
-
-}
-
+function undoLine(){ lines.pop(); redraw(); }
 function download(){
-
-const link=document.createElement("a");
-link.download="planta.png";
-link.href=canvas.toDataURL("image/png");
-link.click();
-
+  const link=document.createElement("a");
+  link.download="planta.png";
+  link.href=canvas.toDataURL("image/png");
+  link.click();
 }
 
+// ====== Sistema de Repositórios ======
+function saveRepo(){
+  let name=prompt("Digite o nome do repositório:");
+  if(!name) return;
+  let repo={lines:lines,texts:texts};
+  let saved=JSON.parse(localStorage.getItem("repos"))||{};
+  saved[name]=repo;
+  localStorage.setItem("repos",JSON.stringify(saved));
+  alert("Repositório salvo!");
+  renderRepos();
+}
+
+function newRepo(){
+  if(confirm("Tem certeza que quer criar um novo repositório? O atual será limpo.")){
+    lines=[]; texts=[];
+    redraw();
+  }
+}
+
+function deleteRepo(name){
+  let saved=JSON.parse(localStorage.getItem("repos"))||{};
+  if(saved[name]){
+    delete saved[name];
+    localStorage.setItem("repos",JSON.stringify(saved));
+    renderRepos();
+  }
+}
+
+function renderRepos(){
+  const list=document.getElementById("repoList");
+  list.innerHTML="";
+  let saved=JSON.parse(localStorage.getItem("repos"))||{};
+  for(let name in saved){
+    let div=document.createElement("div");
+    div.className="repo-item";
+    let span=document.createElement("span");
+    span.textContent=name;
+    span.onclick=()=>{ loadRepo(name); };
+    let delBtn=document.createElement("button");
+    delBtn.textContent="❌";
+    delBtn.onclick=()=>{ if(confirm(`Deletar "${name}"?`)) deleteRepo(name); };
+    div.appendChild(span);
+    div.appendChild(delBtn);
+    list.appendChild(div);
+  }
+}
+
+function loadRepo(name){
+  let saved=JSON.parse(localStorage.getItem("repos"))||{};
+  if(saved[name]){
+    lines=saved[name].lines || [];
+    texts=saved[name].texts || [];
+    redraw();
+    alert(`Repositório "${name}" carregado!`);
+  }
+}
+
+renderRepos();
 </script>
 
 <script>
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("service-worker.js");
-}
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("service-worker.js"); }
 </script>
 
 </body>
